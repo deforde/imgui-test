@@ -3,4 +3,4 @@
 
 int runDemo();
 
-#endif //GUI_H
+#endif // GUI_H
