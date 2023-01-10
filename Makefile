@@ -12,12 +12,14 @@ SRCS += imgui/imgui_tables.cpp
 SRCS += imgui/imgui_widgets.cpp
 SRCS += imgui/backends/imgui_impl_sdl.cpp
 SRCS += imgui/backends/imgui_impl_opengl3.cpp
+SRCS += implot/implot.cpp
+SRCS += implot/implot_items.cpp
 
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-INC_DIRS += imgui imgui/backends /usr/include/SDL2
+INC_DIRS += imgui imgui/backends /usr/include/SDL2 implot
 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
@@ -36,7 +38,7 @@ all: target
 debug: CFLAGS += -g3 -D_FORTIFY_SOURCE=2
 debug: target
 
-target: imgui $(TARGET)
+target: imgui implot $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
@@ -49,7 +51,10 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean compdb valgrind
+.PHONY: clean compdb valgrind run
+
+run: san
+	./$(TARGET)
 
 clean:
 	@rm -rf $(BUILD_DIR)
@@ -65,5 +70,10 @@ imgui:
 	mkdir -p imgui && \
 	curl -L https://codeload.github.com/ocornut/imgui/tar.gz/refs/tags/v1.89.2 | \
 	tar --strip-components=1 -xz -C imgui
+
+implot:
+	mkdir -p implot && \
+	curl -L https://github.com/epezent/implot/archive/refs/tags/v0.14.tar.gz | \
+	tar --strip-components=1 -xz -C implot
 
 -include $(DEPS)

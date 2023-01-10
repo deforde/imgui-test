@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl.h"
+#include "implot.h"
 
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -36,6 +37,7 @@ int runDemo() {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
 
@@ -49,29 +51,18 @@ int runDemo() {
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    char buf[128] = {0};
-    float f = 0.f;
 
     // Main loop
-    bool done = false;
-    while (!done) {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
-        // tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data
-        // to your main application, or clear/overwrite your copy of the mouse
-        // data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input
-        // data to your main application, or clear/overwrite your copy of the
-        // keyboard data. Generally you may always pass all inputs to dear
-        // imgui, and hide them from your application based on those two flags.
+    while (true) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL2_ProcessEvent(&event);
-            done |= event.type == SDL_QUIT ||
-                    (event.type == SDL_WINDOWEVENT &&
-                    event.window.event == SDL_WINDOWEVENT_CLOSE &&
-                    event.window.windowID == SDL_GetWindowID(window));
+            if (event.type == SDL_QUIT ||
+                (event.type == SDL_WINDOWEVENT &&
+                 event.window.event == SDL_WINDOWEVENT_CLOSE &&
+                 event.window.windowID == SDL_GetWindowID(window))) {
+                goto exit;
+            }
         }
 
         // Start the Dear ImGui frame
@@ -79,12 +70,28 @@ int runDemo() {
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Text("Hello, world %d", 123);
-        if (ImGui::Button("Save")) {
-            //do something
+        ImGui::Begin("imgui-test");
+
+        static float xs1[1001], ys1[1001];
+        for (int i = 0; i < 1001; ++i) {
+            xs1[i] = i * 0.001f;
+            ys1[i] = 0.5f +
+                     0.5f * sinf(50 * (xs1[i] + (float)ImGui::GetTime() / 10));
         }
-        ImGui::InputText("string", buf, IM_ARRAYSIZE(buf));
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+        static double xs2[20], ys2[20];
+        for (int i = 0; i < 20; ++i) {
+            xs2[i] = i * 1 / 19.0f;
+            ys2[i] = xs2[i] * xs2[i];
+        }
+        if (ImPlot::BeginPlot("Line Plots")) {
+            ImPlot::SetupAxes("x", "y");
+            ImPlot::PlotLine("f(x)", xs1, ys1, 1001);
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
+            ImPlot::PlotLine("g(x)", xs2, ys2, 20, ImPlotLineFlags_Segments);
+            ImPlot::EndPlot();
+        }
+
+        ImGui::End();
 
         // Rendering
         ImGui::Render();
@@ -96,10 +103,13 @@ int runDemo() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
+exit:
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     SDL_GL_DeleteContext(gl_context);
