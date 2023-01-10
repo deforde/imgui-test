@@ -1,14 +1,6 @@
 #ifndef GUI_H
 #define GUI_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int runDemo(void);
-
-#ifdef __cplusplus
-}
-#endif
+int runDemo();
 
 #endif //GUI_H

@@ -3,8 +3,7 @@ TARGET_NAME := imgui-test
 BUILD_DIR := build
 SRC_DIRS := src
 
-SRCS := $(shell find $(SRC_DIRS) -name '*.c')
-SRCS += $(shell find $(SRC_DIRS) -name '*.cpp')
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 SRCS += imgui/imgui.cpp
 SRCS += imgui/imgui_demo.cpp
 SRCS += imgui/imgui_draw.cpp
@@ -23,19 +22,19 @@ INC_DIRS += imgui imgui/backends /usr/include/SDL2 implot
 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CFLAGS := -Wall -Wextra -Wpedantic -Werror $(INC_FLAGS) -MMD -MP
+CXXFLAGS := -Wall -Wextra -Wpedantic -Werror $(INC_FLAGS) -MMD -MP
 LDFLAGS := -lSDL2 -lGL
 
 TARGET := $(BUILD_DIR)/$(TARGET_NAME)
 
 san: debug
-san: CFLAGS += -fsanitize=address,undefined
+san: CXXFLAGS += -fsanitize=address,undefined
 san: LDFLAGS += -fsanitize=address,undefined
 
-all: CFLAGS += -O3 -DNDEBUG
+all: CXXFLAGS += -O3 -DNDEBUG
 all: target
 
-debug: CFLAGS += -g3 -D_FORTIFY_SOURCE=2
+debug: CXXFLAGS += -g3 -D_FORTIFY_SOURCE=2
 debug: target
 
 target: imgui implot $(TARGET)
@@ -43,13 +42,9 @@ target: imgui implot $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.o: %.c
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .PHONY: clean compdb valgrind run
 
